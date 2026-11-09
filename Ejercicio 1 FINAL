@@ -1,0 +1,93 @@
+def limpiar_registro_sensor(registro_raw):
+
+    # 1. Limpieza 
+    sensor_et = registro_raw.get("sensor_id")
+    sensor_et = str(sensor_et).strip() if sensor_et is not None else "DESCONOCIDO"
+
+    # 2. Temperatura
+    temp_inicial = registro_raw.get("temperatura", 0.0)
+
+    if temp_inicial is not None:
+        temp_filtrada = "".join([char for char in str(temp_inicial) if char.isdigit() or char in ['.', '-']])
+
+        try:
+            temperatura = float(temp_filtrada)
+        except ValueError:
+            temperatura = 0.0
+    else:
+        temperatura = 0.0
+
+    # 3. Ubicacion
+    ubicacion_inicial = registro_raw.get("ubicacion", "Ubicación No Especificada")
+
+    if ubicacion_inicial is not None:
+        ubicacion = str(ubicacion_inicial).strip()
+
+        if not ubicacion:
+            ubicacion = "Ubicación No Especificada"
+    else:
+        ubicacion = "Ubicación No Especificada"
+
+    # 4. Retorno
+    return {
+        "sensor_id": sensor_et,
+        "temperatura": temperatura,
+        "ubicacion": ubicacion
+    }
+
+
+def generar_resumen_sensores(lista_sensores_limpios, umbral_temperatura):
+
+    lista_sensores_alerta = []
+    suma_temp = 0.0
+
+    for sensor in lista_sensores_limpios:
+        temp_actual = sensor["temperatura"]
+        suma_temp += temp_actual
+
+        # 1. Alerta
+        if temp_actual > umbral_temperatura:
+            lista_sensores_alerta.append(sensor["sensor_id"])
+
+    # 2. Promedio
+    if len(lista_sensores_limpios) > 0:
+        promedio_temperatura = round(suma_temp / len(lista_sensores_limpios), 2)
+    else:
+        promedio_temperatura = 0.0
+
+    return (lista_sensores_alerta, promedio_temperatura)
+
+--
+
+if __name__ == '__main__':
+    registros_raw = [
+        {"sensor_id": " SENSOR-001 ", "temperatura": "24.5C", "ubicacion": "Planta 1"},
+        {"sensor_id": "SENSOR-002", "temperatura": "31.2°C", "ubicacion": "   "},       
+        {"sensor_id": " SENSOR-003 ", "temperatura": "19.0", "ubicacion": None},
+    ]
+    
+    UMBRAL_TEMP = 25.0
+    
+    registros_limpios = []
+    for r in registros_raw:
+        registro_limpio = limpiar_registro_sensor(r)
+        registros_limpios.append(registro_limpio)
+        
+    alertas, promedio = generar_resumen_sensores(registros_limpios, UMBRAL_TEMP)
+    
+    print("-" * 60)
+    print("ECOTECH SOLUTIONS - ALERTAS")
+    print("-" * 60)
+    print(f"Promedio Térmico Global de la Planta: {promedio}°C")
+    print(f"Dispositivos que superan el umbral ({UMBRAL_TEmp}°C): {alertas}")
+    print("-" * 60)
+
+
+
+
+
+
+
+
+ 
+    return (lista_sensores_alerta, promedio_temperatura)
