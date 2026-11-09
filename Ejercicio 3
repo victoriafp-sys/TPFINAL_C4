@@ -1,0 +1,85 @@
+import unittest
+
+def calcular_emisiones_carbono(consumo_kwh: float, factor_emision: float=0.4) -> float:
+    if consumo_kwh < 0:
+        raise ValueError("El consumo eléctrico no puede ser menor a cero.")
+    return consumo_kwh * factor_emision
+
+from unittest import TestCase
+
+class TestCalculoEmisiones(unittest.TestCase):
+    def test_calculo_valor_nominal(self):
+        consumo_kwh = 1000
+        factor_por_defecto = 0.4
+        resultado_esperado = consumo_kwh * factor_por_defecto
+        self.assertAlmostEqual(calcular_emisiones_carbono(consumo_kwh), resultado_esperado)
+
+    def test_calculo_con_factor_personalizado(self):
+        consumo_kwh = 500
+        factor_personalizado = 0.6
+        resultado_esperado = consumo_kwh * factor_personalizado
+        self.assertAlmostEqual(calcular_emisiones_carbono(consumo_kwh, factor_emision=factor_personalizado), resultado_esperado)
+
+    def test_calculo_consumo_cero(self):
+        consumo_kwh = 0
+        factor_por_defecto = 0.4
+        resultado_esperado = consumo_kwh * factor_por_defecto
+       self.assertEqual(calcular_emisiones_carbono(consumo_kwh), resultado_esperado) 
+
+    def test_consumo_negativo_excepcion(self):
+        consumo_negativo = -150
+        with self.assertRaises(ValueError):
+            calcular_emisiones_carbono(consumo_negativo)
+
+if __name__ == '__main__':
+    unittest.main() 
+
+
+
+from django.shortcuts import render
+
+def obtener_metricas_consumo(registros):
+    total_emisiones_global = 0.0
+    planta_mayor_consumo = None
+    max_consumo = -1.0
+
+    for reg in registros:
+        planta = reg['planta']
+        consumo = reg['consumo_kwh']
+        factor = reg.get('factor_emision', 0.4)
+
+        emisiones_planta = calcular_emisiones_carbono(consumo, factor)
+        total_emisiones_global += emisiones_planta
+
+        if consumo > max_consumo:
+            max_consumo = consumo
+            planta_mayor_consumo = planta
+
+    return {
+        'total_emisiones_global': total_emisiones_global,
+        'planta_mayor_consumo': planta_mayor_consumo,
+        'max_consumo : max_consumo,
+    }
+
+
+def vista_panel_sustentabilidad(request):
+    registros_industriales = [
+        {'planta': '1', 'consumo_kwh': 1000, 'factor_emision': 0.42},
+        {'planta': '2', 'consumo_kwh': 20000, 'factor_emision': 0.38},
+        {'planta': '3', 'consumo_kwh': 9000, 'factor_emision': 0.40},
+    ]
+
+    metricas = obtener_metricas_consumo(registros_industriales)
+
+    # Contexto
+    contexto = {
+        'titulo_panel': 'Panel de Sustentabilidad',
+        'total_emisiones': metricas['total_emisiones_global'],
+        'planta_max_consumo': metricas['planta_mayor_consumo'],
+        'consumo_max': metricas['max_consumo'],
+        'total_plantas_auditadas': len(registros_industriales),
+    }
+
+    return render(request, 'sustentabilidad/panel.html', contexto)
+
+
