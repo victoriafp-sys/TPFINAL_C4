@@ -1,0 +1,58 @@
+class StockInvalidoError(Exception):
+    def __init__(self, mensaje="El stock no puede ser negativo."):
+        self.mensaje = mensaje
+        super().__init__(self.mensaje)
+
+class DispositivoEcologico(ABC):
+    def __init__(self, nombre: str, stock: int):
+        self.nombre = nombre
+        self.stock = stock 
+
+    @property
+    def stock(self) -> int:
+        return self.__stock
+
+    @stock.setter
+    def stock(self, nuevo_stock: int):
+        if nuevo_stock < 0:
+            raise StockInvalidoError(f"Error de stock: {nuevo_stock} no es un valor válido.")
+        self.__stock = nuevo_stock
+
+    @abstractmethod
+    def obtener_ficha_tecnica(self) -> str:
+          pass
+
+    def to_dict(self) -> dict:
+        return {
+            "tipo": self.__class__.__name__,
+            "nombre": self.nombre,
+            "stock": self.stock
+        }
+
+class PanelSolar(DispositivoEcologico):    
+    def __init__(self, nombre: str, stock: int, marca: str, eficiencia_porcentaje: float):
+        super().__init__(nombre, stock)
+        self.marca = marca
+        self.eficiencia_porcentaje = eficiencia_porcentaje
+
+    def obtener_ficha_tecnica(self) -> str:
+        return (
+            f"=== FICHA TÉCNICA COMERCIAL ===\n"
+            f"Producto: {self.nombre}\n"
+            f"Marca: {self.marca}\n"
+            f"Eficiencia: {self.eficiencia_porcentaje}%\n"
+            f"Stock Disponible: {self.stock} unidades\n"
+
+    def to_dict(self) -> dict:
+        data = super().to_dict()  
+        data.update({ "eficiencia_porcentaje": self.eficiencia_porcentaje })
+        return data
+
+class GestorInventario:
+    @staticmethod
+    def guardar_catalogo_json(lista_dispositivos: list, ruta_archivo: str) -> bool:
+        for dispositivo in lista_dispositivos:
+            catalogo_ecotech.append(dispositivo.to_dict())    
+       try
+        json.dump(catalogo_ecotech, archivo, indent 4)
+             return True
